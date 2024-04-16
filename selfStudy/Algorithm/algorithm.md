@@ -1246,6 +1246,7 @@ public class InsertionSort {
               System.out.println(queue);
   
               if(i % 3 == 2){
+    
                   queue.dequeue();
                   System.out.println(queue);
               }
@@ -1256,4 +1257,626 @@ public class InsertionSort {
   
   ```
 
-- 
+### 11.双端队列(Deque)
+
+- 可以在队列的**两端添加**元素（addFront、addLast）
+- 可以在队列的**两端删除**元素（removeFront、removeLast）
+
+
+
+### 12.双端队列的实现
+
+- 对于双端队列，其实 removeFront 和课程中介绍的 dequeue 是一样的；addLast 和课程中介绍的 enqueue 是一样的。
+
+  关键是实现 addFront 和 removeLast 两个方法。而这两个方法的实现，关键在于计算出正确的，做出添加和删除操作以后，front 和 last。下面我的参考代码中，对新的 front 和 last 的计算
+
+- ```java
+  package dataStructure;
+  
+  
+  import dataStructure.interfaces.Queue;
+  
+  /**
+   * 双端队列 
+   * @param <E>
+   */
+  public class Deque<E>{
+      private E[] data;
+      private int front, tail;
+      private int size; // 方便起见，我们的 Deque 实现，将使用 size 记录 deque 中存储的元素数量
+  
+      public Deque(int capacity){
+          data = (E[])new Object[capacity]; // 由于使用 size，我们的 Deque 实现不浪费空间
+          front = 0;
+          tail = 0;
+          size = 0;
+      }
+  
+      public Deque(){
+          this(10);
+      }
+  
+      public int getCapacity(){
+          return data.length;
+      }
+  
+      public boolean isEmpty(){
+          return size == 0;
+      }
+  
+      public int getSize(){
+          return size;
+      }
+  
+      // addLast 的逻辑和我们之前实现的队列中的 enqueue 的逻辑是一样的
+      public void addLast(E e){
+  
+          if(size == getCapacity())
+              resize(getCapacity() * 2);
+  
+          data[tail] = e;
+          tail = (tail + 1) % data.length;
+          size ++;
+      }
+  
+      // addFront 是新的方法，请大家注意
+      public void addFront(E e){
+  
+          if(size == getCapacity())
+              resize(getCapacity() * 2);
+  
+          // 我们首先需要确定添加新元素的索引位置
+          // 这个位置是 front - 1 的地方
+          // 但是要注意，如果 front == 0，新的位置是 data.length - 1 的位置
+          front = front == 0 ? data.length - 1 : front - 1;
+          data[front] = e;
+          size ++;
+      }
+  
+      // removeFront 的逻辑和我们之前实现的队列中的 dequeue 的逻辑是一样的
+      public E removeFront(){
+  
+          if(isEmpty())
+              throw new IllegalArgumentException("Cannot dequeue from an empty queue.");
+  
+          E ret = data[front];
+          data[front] = null;
+          front = (front + 1) % data.length;
+          size --;
+          if(getSize() == getCapacity() / 4 && getCapacity() / 2 != 0)
+              resize(getCapacity() / 2);
+          return ret;
+      }
+  
+      // removeLast 是新的方法，请大家注意
+      public E removeLast(){
+  
+          if(isEmpty())
+              throw new IllegalArgumentException("Cannot dequeue from an empty queue.");
+  
+          // 计算删除掉队尾元素以后，新的 tail 位置
+          tail = tail == 0 ? data.length - 1 : tail - 1;
+          E ret = data[tail];
+          data[tail] = null;
+          size --;
+          if(getSize() == getCapacity() / 4 && getCapacity() / 2 != 0)
+              resize(getCapacity() / 2);
+          return ret;
+      }
+  
+      public E getFront(){
+          if(isEmpty())
+              throw new IllegalArgumentException("Queue is empty.");
+          return data[front];
+      }
+  
+      // 因为是双端队列，我们也有一个 getLast 的方法，来获取队尾元素的值
+      public E getLast(){
+          if(isEmpty())
+              throw new IllegalArgumentException("Queue is empty.");
+  
+          // 因为 tail 指向的是队尾元素的下一个位置，我们需要计算一下真正队尾元素的索引
+          int index = tail == 0 ? data.length - 1 : tail - 1;
+          return data[index];
+      }
+  
+      private void resize(int newCapacity){
+  
+          E[] newData = (E[])new Object[newCapacity];
+          for(int i = 0 ; i < size ; i ++)
+              newData[i] = data[(i + front) % data.length];
+  
+          data = newData;
+          front = 0;
+          tail = size;
+      }
+  
+      @Override
+      public String toString(){
+  
+          StringBuilder res = new StringBuilder();
+          res.append(String.format("Queue: size = %d , capacity = %d\n", getSize(), getCapacity()));
+          res.append("front [");
+          for(int i = 0 ; i < size ; i ++){
+              res.append(data[(i + front) % data.length]);
+              if(i != size - 1)
+                  res.append(", ");
+          }
+          res.append("] tail");
+          return res.toString();
+      }
+  
+      public static void main(String[] args){
+  
+          // 在下面的双端队列的测试中，偶数从队尾加入；奇数从队首加入
+          Deque<Integer> dq = new Deque<>();
+          for(int i = 0 ; i < 16 ; i ++){
+              if(i % 2 == 0) dq.addLast(i);
+              else dq.addFront(i);
+              System.out.println(dq);
+          }
+  
+          // 之后，我们依次从队首和队尾轮流删除元素
+          System.out.println();
+          for(int i = 0; !dq.isEmpty(); i ++){
+              if(i % 2 == 0) dq.removeFront();
+              else dq.removeLast();
+              System.out.println(dq);
+          }
+      }
+  }
+  ```
+
+
+
+## 五.栈和队列相关习题
+
+### 1.用队列实现栈
+
+- 仅使用两个队列实现一个后入先出（LIFO）的栈，并支持普通栈的全部四种操作（`push`、`top`、`pop` 和 `empty`）。
+
+  实现 `MyStack` 类：
+
+  - `void push(int x)` 将元素 x 压入栈顶。
+  - `int pop()` 移除并返回栈顶元素。
+  - `int top()` 返回栈顶元素。
+  - `boolean empty()` 如果栈是空的，返回 `true` ；否则，返回 `false` 。
+
+- 只能使用队列的标准操作 —— 也就是 `push to back`、`peek/pop from front`、`size` 和 `is empty` 这些操作。
+
+- 所使用的语言也许不支持队列。 你可以使用 list （列表）或者 deque（双端队列）来模拟一个队列 , 只要是标准的队列操作即可。
+
+- ```
+  输入：
+  ["MyStack", "push", "push", "top", "pop", "empty"]
+  [[], [1], [2], [], [], []]
+  输出：
+  [null, null, null, 2, 2, false]
+  ```
+
+- **解释**
+
+  - ```java
+    public class MyStack {
+        private Queue<Integer> q;
+    
+        public MyStack(){
+            q = new LinkedList<>();
+        }
+    
+        /**
+         * empty的实现直接调用q的isEmpty即可
+         * @return
+         */
+        public boolean empty(){
+            return q.isEmpty();
+        }
+        
+        //...其他方法
+    ```
+
+  - > 1）Leetcode 的这个问题不需要使用泛型，我们封装的数据结构，默认接受整型数，在这里，直接使用 Java 内置的 Queue。Java 中的 Queue 是一个接口，具体实例化它，需要选择一 个数据结构。在这里，我们选择使用 LinkedList。LinkedList 是链表，关于链表，下一章进行详细的介绍。
+
+  - > **2）对于一个栈来说，关键是栈顶在哪？**
+    >
+    > **栈是一端入，同一端出；而队列是一端入，另一端出。如果只给出一个队列，先假设，入队的一端是栈顶，一旦这样定义那么自己封装的MyStack的入栈操作就很简单了：直接把元素放入队列就好了。**
+
+  - ```
+    public void push(int x){
+    	q.add(x);
+    }
+    ```
+
+  - > **3）关键是这样一来，怎么实现pop() ? 换句话说。如何拿到队列尾的那个元素？**
+    >
+    > **因为此时，只能取出队首的元素，所以想要拿到队尾的元素，必须把现在队列中的 n - 1个元素都取出来。剩下的那一个元素，就是队尾的元素。**
+    >
+    > **可是，取出的 n - 1 个元素我们不能扔掉，问题又限制必须使用队列这种数据结构，所以此时，我们可以使用另外一个队列q2，来存储从队列 q 中取出的元素，最后，队列 q 里只剩下一个元素，就是需要拿出的 “栈顶元素”。将这个元素删除后，队列 q2 里的数据就是原始数据 ， 然后用 队列q2覆盖队列q就是好了。**
+
+  - ```java
+      public int pop(){
+           //创建另外一个队列
+           Queue<Integer> q2 = new LinkedList<>();
+           //除了最后一个元素，将q中所有元素放入q2
+           while (q.size() > 1){
+                q2.add(q.remove());
+           }
+           // q 中剩下的最后一个元素就是 “栈顶元素”
+           int ret = q.remove();
+           //此时 q2 是整个数据结构存储的所有其他数据，赋值给q
+           q = q2;
+           //返回“栈顶”元素
+           return ret;
+       }
+    
+    ```
+
+  - > **4)一旦实现了pop()，实现top就简单了，可以复用已实现的pop，将“栈顶元素拿出来”，记录下来作为返回值，然后因为top不会删除元素，在将这个值放进队列就好了。**
+
+  - ```java
+        public int top(){
+            int ret = pop();
+            push(ret);
+            return ret;
+        }
+    ```
+
+  - > **5）这样就用队列实现了栈的功能。**
+    >
+    > **简单分析一下复杂度：**
+    >
+    > ​       **初始化的构造函数，O(1)；**
+    >
+    > ​       **判断栈是否为空empty，O(1);**
+    >
+    > ​       **入栈push，O(n);**
+    >
+    > ​      **出栈 pop，因为把队列中所有元素都拿出来一趟，O(n)；**
+    >
+    > ​      **而 top，因为使用了pop，也是 O(n)**
+    >
+    > **完整代码如下：**
+
+  - ```java
+    package task;
+    import java.util.LinkedList;
+    import java.util.Queue;
+    
+    public class MyStack {
+        private Queue<Integer> q;
+    
+        public MyStack(){
+            q = new LinkedList<>();
+        }
+    
+        /**
+         * empty的实现直接调用q的isEmpty即可
+         * @return
+         */
+        public boolean empty(){
+            return q.isEmpty();
+        }
+    
+        /**
+         * 对于一个栈来说，关键是栈顶在哪？
+         * 栈是一端入，同一端出；而队列是一端入，另一端出。
+         * 如果只给出一个队列，先假设，入队的一端是栈顶，一旦这样定义那么自己封装的MyStack的入栈操作就很简单了
+         * 直接把元素放入队列就好了
+         */
+        public void push(int x){
+            q.add(x);
+        }
+    
+        /**
+         * 关键是这样一来，怎么实现pop() ? 换句话说。如何拿到队列尾的那个元素？
+         * 因为此时，只能取出队首的元素，所以想要拿到队尾的元素，必须把现在队列中的 n - 1个元素都取出来。剩下的那一个元素，就是队尾的元素。
+         * 可是，取出的 n - 1 个元素我们不能扔掉，问题又限制必须使用队列这种数据结构，所以此时，
+         * 我们可以使用另外一个队列q2，来存储从队列 q 中取出的元素，
+         * 最后，队列 q 里只剩下一个元素，就是需要拿出的 “栈顶元素”。
+         * 将这个元素删除后，队列 q2 里的数据就是原始数据 ， 然后用 队列q2覆盖队列q就是好了。
+         */
+       public int pop(){
+           //创建另外一个队列
+           Queue<Integer> q2 = new LinkedList<>();
+    
+           //除了最后一个元素，将q中所有元素放入q2
+           while (q.size() > 1){
+                q2.add(q.remove());
+           }
+           // q 中剩下的最后一个元素就是 “栈顶元素”
+           int ret = q.remove();
+           //此时 q2 是整个数据结构存储的所有其他数据，赋值给q
+           q = q2;
+           //返回“栈顶”元素
+           return ret;
+       }
+        /**
+         *一旦实现了pop()，实现top就简单了，可以复用已实现的pop，
+         * 将“栈顶元素拿出来”，记录下来作为返回值，然后因为top不会删除元素，在将这个值放进队列就好了。
+         */
+        public int top(){
+            int ret = pop();
+            push(ret);
+            return ret;
+        }
+    }
+    ```
+
+  - > **思考：可以将top的复杂度降至 O(1)吗？**
+    >
+    > **答案是可以的！**
+    >
+    > **其实，没有必要每次取出栈顶元素的时候都把元素拿出来一趟，在整个类中可以使用一个变量，假设叫top，来追踪记录栈顶的元素：**
+
+  - ```java
+       private Queue<Integer> q;
+       private int top; //追踪记录栈顶的元素
+    
+    //.....
+    
+    //这样一来，我们push的过程中，就需要维护 top 变量
+    public void push(int x){
+            q.add(x);
+            top = x;
+        }
+    
+    //而我们pop的过程，因为拿出栈顶元素以后，top里要存放新的栈顶元素，所以也要维护top
+     public int pop(){
+           //创建另外一个队列
+           Queue<Integer> q2 = new LinkedList<>();
+    
+           //除了最后一个元素，将q中所有元素放入q2
+           while (q.size() > 1){
+               //每从q中取出一个元素，都给top赋值
+               //top最后存储的就是q中除了队尾以外最后一个元素，也就是“新的栈顶元素”
+               top = q.peek();
+               q2.add(q.remove());
+           }
+           // q 中剩下的最后一个元素就是 “栈顶元素”
+           int ret = q.remove();
+           //此时 q2 是整个数据结构存储的所有其他数据，赋值给q
+           q = q2;
+           //返回“栈顶”元素
+           return ret;
+       }
+    ```
+
+  - > **现在，我的myStack类中top方法的复杂度就是 O(1)了，其他方法的复杂度不变**
+    >
+    > **完整代码如下：**
+
+  - ```java
+    package task;
+    
+    import java.util.LinkedList;
+    import java.util.Queue;
+    public class MyStack {
+        private Queue<Integer> q;
+        private int top; //追踪记录栈顶的元素
+    
+        public MyStack(){
+            q = new LinkedList<>();
+        }
+    
+        /**
+         * empty的实现直接调用q的isEmpty即可
+         * @return
+         */
+        public boolean empty(){
+            return q.isEmpty();
+        }
+    
+        /**
+         * 对于一个栈来说，关键是栈顶在哪？
+         * 栈是一端入，同一端出；而队列是一端入，另一端出。
+         * 如果只给出一个队列，先假设，入队的一端是栈顶，一旦这样定义那么自己封装的MyStack的入栈操作就很简单了
+         * 直接把元素放入队列就好了
+         */
+        //这样一来，我们push的过程中，就需要维护 top 变量
+        public void push(int x){
+            q.add(x);
+            top = x;
+        }
+    
+        /**
+         * 关键是这样一来，怎么实现pop() ? 换句话说。如何拿到队列尾的那个元素？
+         * 因为此时，只能取出队首的元素，所以想要拿到队尾的元素，必须把现在队列中的 n - 1个元素都取出来。剩下的那一个元素，就是队尾的元素。
+         * 可是，取出的 n - 1 个元素我们不能扔掉，问题又限制必须使用队列这种数据结构，所以此时，
+         * 我们可以使用另外一个队列q2，来存储从队列 q 中取出的元素，
+         * 最后，队列 q 里只剩下一个元素，就是需要拿出的 “栈顶元素”。
+         * 将这个元素删除后，队列 q2 里的数据就是原始数据 ， 然后用 队列q2覆盖队列q就是好了。
+         */
+        //而我们pop的过程，因为拿出栈顶元素以后，top里要存放新的栈顶元素，所以也要维护top
+       public int pop(){
+           //创建另外一个队列
+           Queue<Integer> q2 = new LinkedList<>();
+    
+           //除了最后一个元素，将q中所有元素放入q2
+           while (q.size() > 1){
+               //每从q中取出一个元素，都给top赋值
+               //top最后存储的就是q中除了队尾以外最后一个元素，也就是“新的栈顶元素”
+               top = q.peek();
+    
+                q2.add(q.remove());
+           }
+           // q 中剩下的最后一个元素就是 “栈顶元素”
+           int ret = q.remove();
+           //此时 q2 是整个数据结构存储的所有其他数据，赋值给q
+           q = q2;
+           //返回“栈顶”元素
+           return ret;
+       }
+        /**
+         *一旦实现了pop()，实现top就简单了，可以复用已实现的pop，
+         * 将“栈顶元素拿出来”，记录下来作为返回值，然后因为top不会删除元素，在将这个值放进队列就好了。
+         */
+    //    public int top(){
+    //        int ret = pop();
+    //        push(ret);
+    //        return ret;
+    //    }
+        
+        /**
+         * 思考：可以将top的复杂度降至 O(1)吗？
+         * 答案是可以的！
+         * 其实，没有必要每次取出栈顶元素的时候都把元素拿出来一趟，在整个类中可以使用一个变量，假设叫top，来追踪记录栈顶的元素：
+         */
+        public int top(){
+            return top;
+        }
+    }
+    ```
+
+  - > **思考：上面的方式，push是O（1）的，pop是O（n）的，能不能实现push为O(n)，pop是O(1)的？**
+    >
+    > **当然能！！**
+    >
+    > **只需要将队列首定义为栈顶，这样一来，pop就能直接从队列中取出元素，就是O（1），当然，这样一来，top的实现就是看队首元素，也O（1）**
+
+  - ```java
+    public int pop(){
+       return q.remove();
+    }
+    public int top(){
+       return q.peek();
+    }
+    ```
+
+  - > **但是这样一来，push的过程，就变成了要想办法把元素放入队首**
+    >
+    > **怎么放？**
+    >
+    > **还是一样的思路，使用另外一个队列暂存所有元素，可以把先把q的所有元素放到q2中，然后把新的元素给q,之后，在把q2中暂存的元素放入q中，就好了**
+
+  - ```java
+     public int push(int x){
+         Queue<Integer> q2 = new LinkedList<>();
+           while (!q.isEmpty()){
+               q2.add(q.remove());
+           }
+         q.add(x);
+         
+         while (!q2.isEmpty()){
+               q.add(q2.remove());
+           }
+       }
+    ```
+
+  - > 也可以直接给 q2 里添加新的 x，然后把 q 中所有元素再添加到 q2 中。最后，让 q 指向新的 q2 就好了：
+
+  - ```java
+     public int push(int x){
+         Queue<Integer> q2 = new LinkedList<>();
+         q2.add(x);
+         
+         while (!q.isEmpty()){
+               q2.add(q1.remove());
+           }
+         q = q2;
+       }
+    ```
+
+  - > 现在，我们的 pop，时间复杂度是 O(1) 的；push，时间复杂度是 O(n) 的
+    >
+    > 完整代码如下
+
+  - ```java
+    public class MyStack {
+    private Queue<Integer> q;
+    
+        public MyStack3() {
+         q = new LinkedList<>();
+        }
+    
+        public void push(int x) {
+         Queue<Integer> q2 = new LinkedList<>();
+         q2.add(x);
+         while(!q.isEmpty()){
+             q2.add(q.remove());
+         }
+         q = q2;
+        }
+    
+        public int pop() {
+         return q.remove();
+        }
+    
+        public int top() {
+         return q.peek();
+        }
+    
+        public boolean empty() {
+         return q.isEmpty();
+        }
+    }
+    ```
+
+  - > **最后思考：可以只用一个队列，而不使用第二个队列解决问题嘛？**
+    >
+    > **答案是可以的！！**
+    >
+    > **仔细观察之前的代码，主要的操作集中在push中。**
+    >
+    > **上面的push,本质就是，在原来的队列头添加一个新元素x，其他元素不变。**
+    >
+    > **因为，队列只能在队尾添加元素，所以我们使用了第二个队列。**
+    >
+    > **但其实，完全可以把新的x直接放在q的队尾，**
+    >
+    > **之后，我们要做的事，是将x调整到q的队首，同时其他位置不变。**
+    >
+    > **其实很简单。将q中其他元素，出队在入队。执行 n - 1次之后，就是我们想要的结果了。**
+
+    > **比如，我的队列中，元素1 , 2 , 3。对于栈来说，添加元素 4 以后，我们希望得到 4，1，2，3**
+    >
+    > **可是因为q是队列，我们将 4 入队后，得到的是 1,2,3,4**
+    >
+    > **现在，队列中有4个元素，我们只需要执行3次出队再入队。**
+    >
+    > **第一次，出队1再入队1，得到：2,3,4,1**
+    >
+    > **第二次，出队2再入队2，得到：3,4,1,2**
+    >
+    > **第三次，出队3再入队3，得到：4,1,2,3**
+    >
+    > **至此就是我们想要的结果了。**
+
+  - ```java
+    public void push(int x) {
+        // 首先，将 x 入队
+        q.add(x);
+        // 执行 n - 1 次出队再入队的操作
+        for(int i = 1; i < q.size(); i ++){
+            q.add(q.remove());
+        }
+    }
+    ```
+
+  - > **上诉代码复杂度没变，但是只使用了一个队列**
+    > **完整代码如下**
+
+  - ```java
+    public class MyStack4 {
+        private Queue<Integer> q;
+        public MyStack4() {
+         q = new LinkedList<>();
+        }
+        public void push(int x) {
+         // 首先，将 x 入队
+         q.add(x);
+         // 执行 n - 1 次出队再入队的操作
+         for(int i = 1; i < q.size(); i ++){
+             q.add(q.remove());
+         }
+        }
+        public int pop() {
+         return q.remove();
+        }
+        public int top() {
+         return q.peek();
+        }
+        public boolean empty() {
+         return q.isEmpty();
+        }
+    }
+    ```
