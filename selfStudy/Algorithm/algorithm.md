@@ -1454,7 +1454,7 @@ public class InsertionSort {
   [null, null, null, 2, 2, false]
   ```
 
-- **解释**
+- **解析**
 
   - ```java
     public class MyStack {
@@ -1508,7 +1508,7 @@ public class InsertionSort {
            //返回“栈顶”元素
            return ret;
        }
-    
+      
     ```
 
   - > **4)一旦实现了pop()，实现top就简单了，可以复用已实现的pop，将“栈顶元素拿出来”，记录下来作为返回值，然后因为top不会删除元素，在将这个值放进队列就好了。**
@@ -1611,7 +1611,7 @@ public class InsertionSort {
   - ```java
        private Queue<Integer> q;
        private int top; //追踪记录栈顶的元素
-    
+      
     //.....
     
     //这样一来，我们push的过程中，就需要维护 top 变量
@@ -1880,3 +1880,350 @@ public class InsertionSort {
         }
     }
     ```
+
+### 2.用栈实现队列
+
+- 仅使用两个栈实现先入先出队列。队列应当支持一般队列支持的所有操作（`push`、`pop`、`peek`、`empty`）：
+
+  实现 `MyQueue` 类：
+
+  - `void push(int x)` 将元素 x 推到队列的末尾
+  - `int pop()` 从队列的开头移除并返回元素
+  - `int peek()` 返回队列开头的元素
+  - `boolean empty()` 如果队列为空，返回 `true` ；否则，返回 `false`
+
+- **只能** 使用标准的栈操作 —— 也就是只有 `push to top`, `peek/pop from top`, `size`, 和 `is empty` 操作是合法的。
+
+- 所使用的语言也许不支持栈。你可以使用 list 或者 deque（双端队列）来模拟一个栈，只要是标准的栈操作即可。
+
+- ```
+  输入：
+  ["MyQueue", "push", "push", "peek", "pop", "empty"]
+  [[], [1], [2], [], [], []]
+  输出：
+  [null, null, null, 1, 1, false]
+  ```
+
+- **解析**
+
+  - ```java
+    public class MyQueue {
+        private Stack<Integer> stack;
+        
+        public MyQueue() {
+            stack = new Stack<>();
+        }
+        // empty 的实现很简单，直接调用 stack 的 isEmpty 就好了：）
+        
+        public boolean empty() {
+            return stack.isEmpty();
+        }
+    }
+    // .... 其他方法
+    ```
+
+  - > **看看其他操作**
+    >
+    > **首先，我们定义，栈顶就是队首，这样一定义，出队和查看队首元素就变得非常简单**
+
+  - ```java
+        //首先，我们定义，栈顶就是队首，这样一定义，出队和查看队首元素就变得非常简单
+        public int pop(){
+            return stack.pop();
+        }
+    
+        public int peek(){
+            return stack.peek();
+        }
+    ```
+
+  - > **现在我想实现push,就需要在栈底添加一个元素。**
+    >
+    > **有了前一个作业的经验，我们可以使用另外一个stack2暂存现在stack的元素，然后再stack添加新元素后，再把stack2的元素放回来**
+
+  - ```java
+        public void push(int x){
+            Stack<Integer> stack2 = new Stack<>();
+            
+            //将stack元素暂存进stack2
+            while (!stack.isEmpty()){
+                stack2.push(stack.pop());
+            }
+            
+            //在stack添加新的元素
+            stack.push(x);
+            
+            //把stack2中元素放回stack
+            while (!stack2.isEmpty()){
+                stack.push(stack2.pop());
+            }
+        }
+    ```
+
+  - > **这样，就使用栈实现了队列的功能。**
+    >
+    > **简单分析一下复杂度。**
+    >
+    > **初始化构造函数，O(1)**
+    >
+    > **判断队列是否为空empty,O(1)**
+    >
+    > **出队pop,O(1)**
+    >
+    > **入队push,因为需要把队列中的所有元素拿出来一趟，复杂度是O（n）**
+    >
+    > **完整代码如下**：
+
+  - ```java
+    package task;
+    
+    import java.util.Stack;
+    public class MyQueue {
+        private Stack<Integer> stack;
+    
+        public MyQueue(){
+            stack = new Stack<>();
+        }
+    
+        //empty 的实现很简单，直接调用 stack 的 isEmpty 就好了：）
+        public boolean empty(){
+            return stack.isEmpty();
+        }
+    
+        //首先，我们定义，栈顶就是队首，这样一定义，出队和查看队首元素就变得非常简单
+        public int pop(){
+            return stack.pop();
+        }
+    
+        public int peek(){
+            return stack.peek();
+        }
+    
+        public void push(int x){
+            Stack<Integer> stack2 = new Stack<>();
+    
+            //将stack元素暂存进stack2
+            while (!stack.isEmpty()){
+                stack2.push(stack.pop());
+            }
+    
+            //在stack添加新的元素
+            stack.push(x);
+    
+            //把stack2中元素放回stack
+            while (!stack2.isEmpty()){
+                stack.push(stack2.pop());
+            }
+        }
+    }
+    ```
+
+  - > **思考：能不能实现push是O(1)，pop是O(n)的算法**
+    >
+    > **当然可以！**
+    >
+    > **我们只需要定义栈顶为队尾，栈底定义为队首就好了。这样一来，push就是直接往栈里添加一个元素，就是O（1）的**
+    >
+    > **不过这样做，为了让peek()更有效率，可以像之前用队列实现栈一样，使用另外一个变量，来追踪存储队首的元素，我们管它叫front**
+
+  - ```java
+    public class MyQueue {
+        private Stack<Integer> stack;
+        int front;
+        // 其他方法 ...
+    }
+    ```
+
+  - > **这样一来push就是下面这样**
+
+  - ```java
+    public void push(int x){
+        if(empty()){
+            front = x;
+        }
+        stack.push(x)
+    }
+    //而peek直接调用front就好了
+    public int peek(){
+        return front;
+    }
+    ```
+
+  - > **这样一来，pop的过程，就是去除栈底元素。**
+    >
+    > **依然是。使用另外一个栈 stack2 暂存除了最后一个元素以外的所有元素。在取出栈底元素以后，再把 stack2 的所有元素放回stack中，这个过程需要注意front的维护**
+
+  - ```java
+    public int pop(){
+        Stack<Integer> stack2 = new Stack<>();
+        
+        while(stack.size() > 1){
+            front = stack.peek();
+            stack2.push(stack.pop());
+        }
+        int ret = stack.pop();
+        
+        while(!stack2.isEmpty()){
+            stack.push(stack.pop());
+        }
+        
+        return ret;
+    }
+    ```
+
+  - > **现在，pop的时间复杂度是O(n)，而push的时间复杂度是O(1)的；**
+    >
+    > **完整代码如下：**
+
+  -  ```java
+     public class MyQueue {
+         private Stack<Integer> stack;
+         int front;
+         
+         public MyQueue() {
+      		stack = new Stack<>();
+     	}
+     	
+         public boolean empty() {
+      		return stack.isEmpty();
+     	}
+     
+         public void push(int x){
+             if(empty()){
+                 front = x;
+             }
+             stack.push(x)
+     	}
+         //而peek直接调用front就好了
+         public int peek(){
+             return front;
+         }
+         
+         public int pop(){
+             Stack<Integer> stack2 = new Stack<>();
+     
+             while(stack.size() > 1){
+                 front = stack.peek();
+                 stack2.push(stack.pop());
+             }
+             int ret = stack.pop();
+     
+             while(!stack2.isEmpty()){
+                 stack.push(stack.pop());
+             }
+             return ret;
+         }
+         
+     }
+     ```
+
+  - > **最后，仔细观察一下上面的pop代码，每次，pop的过程，都将 stack 的元素放进 stack2 ，在从 stack2挪回来。**
+    >
+    > **实际上，如果用户连续调用pop的话，这个过程相当于重复了，我们完全可以只把 stack 的元素扔到 stack2 一次。下次在调用pop，如果发现 stack2不为空，就直接拿 stack2 栈顶元素就好了。**
+    >
+    > **使用这个思路，stack2不能是pop里面的一个临时变量了，而需要成为整个MyQueue的成员变量；**
+
+  - ```java
+    public class myQueue{
+        private Stack<Integer> stack1;
+    	private Stack<Integer> stack2;
+    	int front;
+        
+        public MyQueue() {
+     		stack1 = new Stack<>();
+     		stack2 = new Stack<>();
+    	}
+    	// 其他方法...
+    }
+    ```
+
+  - > **这样一来我们pop的逻辑是这样的**
+
+  - ```java
+    public int pop(){
+        //如果 stack2 不为空，直接返回 stack2 的栈顶元素
+        
+        if(!stack2.isEmpty()){
+            return stack2.pop();
+        }
+        
+        while(stack1.size() > 1){
+            stack2.push(stack1.pop());
+        }
+        
+        return stack1.pop();
+    }
+    ```
+
+  - > **注意，上述pop的过程，我们没有更新front。因此，我们的peek函数也需要修改，其实很简单，当stack2不为空时，peek的结果就是stack2.peek(),否则的话，我们取在我们push的过程中更新的front值。**
+
+  - ```java
+    public int peek(){
+        if(!stack2.isEmpty()){
+            return stack2.peek();
+        }
+        return front
+    }
+    ```
+
+  - > **最后，因为现在，stack1和stack2中都有可能存储元素，所以在判断整个队列是否为空的时候，stack1和stack2都要看一下。**
+
+  - ```java
+    public boolean empty(){
+        return stack1.isEmpty()&&stack2.isEmpty();
+    }
+    ```
+
+  - > 完整代码如下：
+
+  - ```java
+    public class MyQueue {
+        private Stack<Integer> stack1;
+    	private Stack<Integer> stack2;
+    	int front;
+        
+        public MyQueue() {
+     		stack1 = new Stack<>();
+     		stack2 = new Stack<>();
+    	}
+    	
+        public boolean empty(){
+        	return stack1.isEmpty()&&stack2.isEmpty();
+    	}
+    
+        public void push(int x){
+            if(stack1.isEmpty()){
+                front = x;
+            }
+            stack1.push(x)
+    	}
+        
+        public int peek(){
+            if(!stack2.isEmpty()){
+                return stack2.peek();
+            }
+            return front
+    	}
+        
+        public int pop(){
+            //如果 stack2 不为空，直接返回 stack2 的栈顶元素
+    
+            if(!stack2.isEmpty()){
+                return stack2.pop();
+            }
+    
+            while(stack1.size() > 1){
+                stack2.push(stack1.pop());
+            }
+    
+            return stack1.pop();
+    	}
+        
+    }
+    ```
+
+  - > **这个代码，整体负责度没有变，pop的最差时间复杂度依然是O(n)**
+    >
+    > **但是，可以想象，一旦调用pop或者直接使用O(1)的复杂度从stack2中拿到结果，或者 stack2 为空，将现在stack中所有元素放到stack2中。**
+    >
+    > **相当于，平均对于每一个元素来说，都只有一次机会进 stack1，也只有一次机会进 stack2，所以，这样实现， pop的均摊复杂度，变成了 O(1)**
